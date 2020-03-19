@@ -22,14 +22,14 @@ exit;
 ## 基本语法
 
 ```mysql
--- 显示所有数据库
+-- 显示所有数据库    //要先切换到一个数据库后，才可显示
 show databases;
 
 -- 创建数据库
-CREATE DATABASE test;
+CREATE DATABASE test;  //test为数据库名
 
 -- 切换数据库
-use test;
+use test;   //test为数据库名
 
 -- 显示数据库中的所有表
 show tables;
@@ -44,14 +44,17 @@ CREATE TABLE pet (
     death DATE
 );
 
--- 查看数据表结构
--- describe pet;
-desc pet;
+-- 查看已有的数据表的结构
+describe pet;     //pet为数据表名
+//desc pet;
 
 -- 查询表
 SELECT * from pet;
 
--- 插入数据
+--查询指定位置
+SELECT * from pet where name = '周星驰';
+
+-- 往数据表中添加数据
 INSERT INTO pet VALUES ('puffball', 'Diane', 'hamster', 'f', '1990-03-30', NULL);
 
 -- 修改数据
@@ -63,16 +66,23 @@ DELETE FROM pet where name = 'squirrel';
 -- 删除表
 DROP TABLE myorder;
 ```
-
+## MySQL的数据类型
+https://www.runoob.com/mysql/mysql-data-types.html
+### 数据类型如何选择
+```mysql
+日期 按照所需格式来选择
+数字和字符串按照所需空间、长度大小来选择
+```
 ## 建表约束
 
 ### 主键约束
 
 ```mysql
--- 主键约束
--- 使某个字段不重复且不得为空，确保表内所有数据的唯一性。
+-- 主键约束  //在创建表时就要设置
+-- 能够唯一约束一张表中的一个类目     //只能有一个主键
+-- 使该类目（如id）不重复且不得为空，确保表内所有数据的唯一性。
 CREATE TABLE user (
-    id INT PRIMARY KEY,
+    id INT PRIMARY KEY,    //这样设为主键后，输入的数据id就不能重复，且不能为空。
     name VARCHAR(20)
 );
 
