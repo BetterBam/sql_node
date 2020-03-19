@@ -57,6 +57,9 @@ SELECT * from pet where name = '周星驰';
 -- 往数据表中添加数据
 INSERT INTO pet VALUES ('puffball', 'Diane', 'hamster', 'f', '1990-03-30', NULL);
 
+-- 往数据表中的指定字段添加数据
+INSERT INTO pet (name) VALUES ('puffball');
+
 -- 修改数据
 UPDATE pet SET name = 'squirrel' where owner = 'Diane';
 
@@ -75,58 +78,63 @@ https://www.runoob.com/mysql/mysql-data-types.html
 ```
 ## 建表约束
 
-### 主键约束
+### 主键约束   //在创建表时就要设置
 
 ```mysql
--- 主键约束  //在创建表时就要设置
--- 能够唯一约束一张表中的一个类目     //只能有一个主键
--- 使该类目（如id）不重复且不得为空，确保表内所有数据的唯一性。
+-- 主键约束      
+能够唯一约束一张表中的一个类目     //只能有一个主键
+使该类目（如id）不重复且不得为空，确保表内所有数据的唯一性。
 CREATE TABLE user (
     id INT PRIMARY KEY,    //这样设为主键后，输入的数据id就不能重复，且不能为空。
     name VARCHAR(20)
 );
 
 -- 联合主键
--- 联合主键中的每个字段都不能为空，并且加起来不能和已设置的联合主键重复。
+只要联合主键的条件加起来不重复即可，也就是只要类目里有一个不重复就可以正常添加（即是或的关系）。
+联合主键中的每个字段都不能为空，并且加起来不能和已设置的联合主键重复。
 CREATE TABLE user (
     id INT,
     name VARCHAR(20),
     password VARCHAR(20),
-    PRIMARY KEY(id, name)
+    PRIMARY KEY(id, name)         //这里的联合主键就是约束了id和name这两个类目
 );
 
 -- 自增约束
--- 自增约束的主键由系统自动递增分配。
+自增约束的主键由系统自动递增分配。
 CREATE TABLE user (
-    id INT PRIMARY KEY AUTO_INCREMENT,
+    id INT PRIMARY KEY AUTO_INCREMENT,    //此处AUTO_INCREMENT 就是自增约束，
+                                      //ta与前面的主键约束PRIMARY KEY联合使用，可实现每插入一个信息，即使没输入id，id也会自动分配给它
     name VARCHAR(20)
 );
 
--- 添加主键约束
--- 如果忘记设置主键，还可以通过SQL语句设置（两种方式）：
-ALTER TABLE user ADD PRIMARY KEY(id);
+-- add添加主键约束
+如果在创建表时忘记了设置主键，还可以通过SQL语句设置（两种方式）：
+ALTER TABLE user ADD PRIMARY KEY(id);           //user为要添加主键的表名，id为要设置主键的类目
+
+-- 使用modify修改字段，添加主键约束
 ALTER TABLE user MODIFY id INT PRIMARY KEY;
 
--- 删除主键
+-- drop删除主键
 ALTER TABLE user drop PRIMARY KEY;
 ```
 
-### 唯一主键
+### 唯一约束      //唯一约束和主键约束的区别就是主键不可以为空，唯一约束可为空
 
 ```mysql
--- 建表时创建唯一主键
+-- 建表时创建唯一约束
+唯一约束修饰的字段的值不可以重复，可以为空
 CREATE TABLE user (
     id INT,
     name VARCHAR(20),
-    UNIQUE(name)
+    UNIQUE(name)        //也可以把unique直接放在上一句的末尾，即name VARCHAR(20) unique
 );
 
--- 添加唯一主键
--- 如果建表时没有设置唯一建，还可以通过SQL语句设置（两种方式）：
+-- 添加唯一约束
+如果建表时没有设置唯一建，还可以通过SQL语句设置（两种方式）：
 ALTER TABLE user ADD UNIQUE(name);
 ALTER TABLE user MODIFY name VARCHAR(20) UNIQUE;
 
--- 删除唯一主键
+-- 删除唯一约束
 ALTER TABLE user DROP INDEX name;
 ```
 
