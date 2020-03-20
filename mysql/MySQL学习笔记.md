@@ -102,7 +102,7 @@ CREATE TABLE user (
 -- 自增约束
 自增约束的主键由系统自动递增分配。
 CREATE TABLE user (
-    id INT PRIMARY KEY AUTO_INCREMENT,    //此处AUTO_INCREMENT 就是自增约束，
+    id INT PRIMARY KEY AUTO_INCREMENT,    //此处AUTO_INCREMENT 就是自增约束，   //id 后面的 INT 就是指id的类型
                                       //ta与前面的主键约束PRIMARY KEY联合使用，可实现每插入一个信息，即使没输入id，id也会自动分配给它
     name VARCHAR(20)
 );
@@ -118,21 +118,23 @@ ALTER TABLE user MODIFY id INT PRIMARY KEY;
 ALTER TABLE user drop PRIMARY KEY;
 ```
 
-### 唯一约束      //唯一约束和主键约束的区别就是主键不可以为空，唯一约束可为空
+### 唯一约束      //唯一约束和主键约束的区别就是主键不可以为空NULL，唯一约束可为空NULL，且唯一约束可约束多个类目
 
 ```mysql
 -- 建表时创建唯一约束
-唯一约束修饰的字段的值不可以重复，可以为空
+唯一约束修饰的字段的值不可以重复，可以为空NULL
 CREATE TABLE user (
     id INT,
     name VARCHAR(20),
-    UNIQUE(name)        //也可以把unique直接放在上一句的末尾，即name VARCHAR(20) unique
+    UNIQUE(name)      //也可以把unique直接放在上一句的末尾，即name VARCHAR(20) unique
+                      //此处UNIQUE(name) 中可以有多个类目，如UNIQUE(id,name) ，此时在表格key中的关键字不为uni，而为mul（限定多个类目时）
+                      //UNIQUE(id, name)和联合主键一样，都是只要两个加起来不重复即可
 );
 
--- 添加唯一约束
+-- 建表后补充添加唯一约束
 如果建表时没有设置唯一建，还可以通过SQL语句设置（两种方式）：
 ALTER TABLE user ADD UNIQUE(name);
-ALTER TABLE user MODIFY name VARCHAR(20) UNIQUE;
+ALTER TABLE user MODIFY name VARCHAR(20) UNIQUE;       //name 后面的 VARCHAR(20) 就是指name的类型，和创建表时设置的类型要一样
 
 -- 删除唯一约束
 ALTER TABLE user DROP INDEX name;
@@ -141,14 +143,21 @@ ALTER TABLE user DROP INDEX name;
 ### 非空约束
 
 ```mysql
+约束的字段不能为空
 -- 建表时添加非空约束
--- 约束某个字段不能为空
 CREATE TABLE user (
     id INT,
-    name VARCHAR(20) NOT NULL
+    name VARCHAR(20) NOT NULL       //这样name就不能为NULL了
 );
 
+-- 建表后补充添加非空约束
+如果建表时没有设置非空约束，还可以通过SQL语句设置（两种方式）：
+ALTER TABLE user ADD NOT NULL(name);                     //是这样吗？
+ALTER TABLE user MODIFY name VARCHAR(20) NOT NULL;       //这个是这样
+
 -- 移除非空约束
+删除非空约束和添加非空约束一样，都是修改表字段的结构；
+直接删除 语句后的 NOT NULL，再输入一遍，这样就把非空删除了；
 ALTER TABLE user MODIFY name VARCHAR(20);
 ```
 
