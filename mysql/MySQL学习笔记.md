@@ -406,10 +406,8 @@ SELECT name, sex, class FROM student;
 SELECT DISTINCT department FROM teacher;       
 
 -- 查询 score 表中成绩在60-80之间的所有行（区间查询和运算符查询）
-
 -- 法一 ： BETWEEN xx AND xx: 查询区间, AND 表示 "并且"
 SELECT * FROM score WHERE degree BETWEEN 60 AND 80;
-
 -- 法二 ： 运算符比较
 SELECT * FROM score WHERE degree >= 60 AND degree <= 80;
 
@@ -766,6 +764,9 @@ WHERE degree > (SELECT degree FROM score WHERE s_no = '109' AND c_no = '3-105');
 -- YEAR(..): 取出日期中的年份
 SELECT no, name, birthday FROM student
 WHERE YEAR(birthday) IN (SELECT YEAR(birthday) FROM student WHERE no IN (101, 108));
+
+SELECT no, name, birthday FROM student
+WHERE YEAR(birthday) = (SELECT YEAR(birthday) FROM student WHERE no IN (101, 108));   //这样是不行的，因为=是对应一个，而数据中有两个，                                                                                       //多个的时候我们要用in
 ```
 
 ### 多层嵌套子查询
