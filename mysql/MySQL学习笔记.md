@@ -44,14 +44,15 @@ CREATE TABLE pet (
     death DATE
 );
 
--- 查看已有的数据表的结构
+-- 查看已有的数据表的结构（注意，只是结构，不会显示已添加的内容）
 describe pet;     //pet为数据表名
-//desc pet;
+或
+desc pet;
 
--- 查询表
+-- 查询表（显示表中所有内容）
 SELECT * from pet;
 
---查询指定位置
+--查询指定位置（显示表中指定内容）
 SELECT * from pet where name = '周星驰';
 
 -- 往数据表中添加数据
@@ -152,7 +153,7 @@ CREATE TABLE user (
 
 -- 建表后补充添加非空约束
 如果建表时没有设置非空约束，还可以通过SQL语句设置（两种方式）：
-ALTER TABLE user ADD NOT NULL(name);                     //是这样吗？
+ALTER TABLE user ADD NOT NULL(name);                     //是这样吗？  不是
 ALTER TABLE user MODIFY name VARCHAR(20) NOT NULL;       //这个是这样
 
 -- 移除非空约束
@@ -165,7 +166,7 @@ ALTER TABLE user MODIFY name VARCHAR(20);
 
 ```mysql
 -- 建表时添加默认约束
--- 约束某个字段的默认值
+-- 约束某个字段的默认值，就是当我们插入字段值时，如果没有传值，就会使用默认值。
 CREATE TABLE user2 (
     id INT,
     name VARCHAR(20),
@@ -179,7 +180,10 @@ ALTER TABLE user MODIFY age INT;
 ### 外键约束
 
 ```mysql
--- 班级
+涉及到两个表：父表和子表  或者说  主表和副表
+
+举例：
+-- 班级表
 CREATE TABLE classes (
     id INT PRIMARY KEY,
     name VARCHAR(20)
@@ -192,26 +196,37 @@ CREATE TABLE students (
     -- 这里的 class_id 要和 classes 中的 id 字段相关联
     class_id INT,
     -- 表示 class_id 的值必须来自于 classes 中的 id 字段值
-    FOREIGN KEY(class_id) REFERENCES classes(id)
+    FOREIGN KEY(class_id) REFERENCES classes(id)          //这就是外键约束，此时班级表是父表，学生表是子表。
 );
 
--- 1. 主表（父表）classes 中没有的数据值，在副表（子表）students 中，是不可以使用的；
--- 2. 主表中的记录被副表引用时，主表不可以被删除。
+-- 1. 主表（父表）classes 中没有的id数据值，在副表（子表）students 中，是不可以使用的；
+-- 2. 主表中的记录被副表引用时，主表不可以被删除。如班级表中的某一条记录被学生表引用了，那么班级表中的该记录此时不能被删除。
 ```
 
 ## 数据库的三大设计范式
 
-### 1NF
+### 第一范式 1NF
 
-只要字段值还可以继续拆分，就不满足第一范式。
+--只要字段值还可以继续拆分，就不满足第一范式。
+--范式设计得越详细，对某些实际操作可能会更好，但并非都有好处，需要对项目的实际情况进行设定。
 
-范式设计得越详细，对某些实际操作可能会更好，但并非都有好处，需要对项目的实际情况进行设定。
+如：
+address
+中国四川省成都市武侯区天赋大道100号     这样一个类目就不满足第一范式
 
-### 2NF
+最好要这样
+country |  province |  city   |  area   | details
+中国    | 四川省    | 成都市  | 武侯区   |天赋大道100号
 
-在满足第一范式的前提下，其他列都必须完全依赖于主键列。如果出现不完全依赖，只可能发生在联合主键的情况下：
+这样才满足第一范式，这样的好处是以后如果要单独筛选country为中国的人，就比较好筛选。
+-- 范式，设计的越详细，可能对于某些操作更方便，但也不一定都是好处。
+
+### 第二范式 2NF
+
+在满足第一范式的前提下，除主键外的其他列都必须完全依赖于主键列。如果在联合主键的情况下，可能出现不完全依赖，此时要进行拆表，使得完全依赖
 
 ```mysql
+如
 -- 订单表
 CREATE TABLE myorder (
     product_id INT,
@@ -222,9 +237,12 @@ CREATE TABLE myorder (
 );
 ```
 
-实际上，在这张订单表中，`product_name` 只依赖于 `product_id` ，`customer_name` 只依赖于 `customer_id` 。也就是说，`product_name` 和 `customer_id` 是没用关系的，`customer_name` 和 `product_id` 也是没有关系的。
+实际上，在这张订单表中，`product_name` 只依赖于 `product_id` ，`customer_name` 只依赖于 `customer_id` 。也就是说，`product_name` 和 `customer_id` 是没有依赖关系的，`customer_name` 和 `product_id` 也是没有依赖关系的。
+即除主键外的其他列，只依赖于主键的部分字段，而不是完全依赖于主键
 
 这就不满足第二范式：其他列都必须完全依赖于主键列！
+
+这时就要进行拆表
 
 ```mysql
 CREATE TABLE myorder (
@@ -244,12 +262,13 @@ CREATE TABLE customer (
 );
 ```
 
-拆分之后，`myorder` 表中的 `product_id` 和 `customer_id` 完全依赖于 `order_id` 主键，而 `product` 和 `customer` 表中的其他字段又完全依赖于主键。满足了第二范式的设计！
+拆分之后，`myorder` 表中的 `product_id` 和 `customer_id` 完全依赖于 `order_id` 主键，而 `product` 和 `customer` 表中的其他字段又完全依赖于他们各自的主键。满足了第二范式的设计！
 
-### 3NF
+### 第三范式 3NF
 
 在满足第二范式的前提下，除了主键列之外，其他列之间不能有传递依赖关系。
 
+例如
 ```mysql
 CREATE TABLE myorder (
     order_id INT PRIMARY KEY,
@@ -259,7 +278,8 @@ CREATE TABLE myorder (
 );
 ```
 
-表中的 `customer_phone` 有可能依赖于 `order_id` 、 `customer_id` 两列，也就不满足了第三范式的设计：其他列之间不能有传递依赖关系。
+表中的 `customer_phone` 除了依赖于主键`order_id` 之外，
+还有可能依赖于  `customer_id` 列，也就不满足了第三范式的设计：其他列之间不能有传递依赖关系。
 
 ```mysql
 CREATE TABLE myorder (
@@ -271,7 +291,7 @@ CREATE TABLE myorder (
 CREATE TABLE customer (
     id INT PRIMARY KEY,
     name VARCHAR(20),
-    phone VARCHAR(15)
+    phone VARCHAR(15)    //把customer_phone放到了这里
 );
 ```
 
@@ -283,7 +303,7 @@ CREATE TABLE customer (
 
 ```mysql
 -- 创建数据库
-CREATE DATABASE select_test;
+CREATE DATABASE select_test;  //select是查询的意思，即查询练习
 -- 切换数据库
 USE select_test;
 
@@ -377,31 +397,34 @@ SELECT * FROM teacher;
 -- 查询 student 表的所有行
 SELECT * FROM student;
 
--- 查询 student 表中的 name、sex 和 class 字段的所有行
+-- 查询指定字段
+查询 student 表中的 name、sex 和 class 字段的所有行
 SELECT name, sex, class FROM student;
 
 -- 查询 teacher 表中不重复的 department 列
--- department: 去重查询
-SELECT DISTINCT department FROM teacher;
+-- DISTINCT: 去重查询
+SELECT DISTINCT department FROM teacher;       
 
 -- 查询 score 表中成绩在60-80之间的所有行（区间查询和运算符查询）
--- BETWEEN xx AND xx: 查询区间, AND 表示 "并且"
+-- 法一 ： BETWEEN xx AND xx: 查询区间, AND 表示 "并且"
 SELECT * FROM score WHERE degree BETWEEN 60 AND 80;
-SELECT * FROM score WHERE degree > 60 AND degree < 80;
+-- 法二 ： 运算符比较
+SELECT * FROM score WHERE degree >= 60 AND degree <= 80;
 
 -- 查询 score 表中成绩为 85, 86 或 88 的行
 -- IN: 查询规定中的多个值
 SELECT * FROM score WHERE degree IN (85, 86, 88);
 
 -- 查询 student 表中 '95031' 班或性别为 '女' 的所有行
--- or: 表示或者关系
+-- or: 表示“或者”关系    and：表示“并且”关系
 SELECT * FROM student WHERE class = '95031' or sex = '女';
 
 -- 以 class 降序的方式查询 student 表的所有行
+-- 关键字 order by + 类目名
 -- DESC: 降序，从高到低
 -- ASC（默认）: 升序，从低到高
 SELECT * FROM student ORDER BY class DESC;
-SELECT * FROM student ORDER BY class ASC;
+SELECT * FROM student ORDER BY class ASC;  //默认是采用升序的，所以这里等于SELECT * FROM student ORDER BY class;
 
 -- 以 c_no 升序、degree 降序查询 score 表的所有行
 SELECT * FROM score ORDER BY c_no ASC, degree DESC;
