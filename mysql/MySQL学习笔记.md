@@ -406,8 +406,10 @@ SELECT name, sex, class FROM student;
 SELECT DISTINCT department FROM teacher;       
 
 -- 查询 score 表中成绩在60-80之间的所有行（区间查询和运算符查询）
+
 -- 法一 ： BETWEEN xx AND xx: 查询区间, AND 表示 "并且"
 SELECT * FROM score WHERE degree BETWEEN 60 AND 80;
+
 -- 法二 ： 运算符比较
 SELECT * FROM score WHERE degree >= 60 AND degree <= 80;
 
@@ -419,8 +421,9 @@ SELECT * FROM score WHERE degree IN (85, 86, 88);
 -- or: 表示“或者”关系    and：表示“并且”关系
 SELECT * FROM student WHERE class = '95031' or sex = '女';
 
+-- 关键字 order by ： 排序
+
 -- 以 class 降序的方式查询 student 表的所有行
--- 关键字 order by + 类目名
 -- DESC: 降序，从高到低
 -- ASC（默认）: 升序，从低到高
 SELECT * FROM student ORDER BY class DESC;
@@ -452,8 +455,9 @@ SELECT AVG(degree) FROM score WHERE c_no = '3-105';
 SELECT AVG(degree) FROM score WHERE c_no = '3-245';
 SELECT AVG(degree) FROM score WHERE c_no = '6-166';
 
--- GROUP BY: 分组查询
-SELECT c_no, AVG(degree) FROM score GROUP BY c_no;
+-- 关键字GROUP BY: 分组
+
+SELECT c_no, AVG(degree) FROM score GROUP BY c_no;  //即把c_no的所有种类的平均值都求出来
 ```
 
 ### 分组条件与模糊查询
@@ -552,8 +556,8 @@ SELECT s_no, c_no, degree FROM score;
 ```mysql
 -- FROM...: 表示从 student, score 表中查询
 -- WHERE 的条件表示为，只有在 student.no 和 score.s_no 相等时才显示出来。
-SELECT name, c_no, degree FROM student, score 
-WHERE student.no = score.s_no;
+
+SELECT name, c_no, degree FROM student, score WHERE student.no = score.s_no;
 +-----------+-------+--------+
 | name      | c_no  | degree |
 +-----------+-------+--------+
@@ -685,7 +689,7 @@ SELECT no, name FROM course;
 | 9-888 | 高等数学        |
 +-------+-----------------+
 
--- 由于字段名存在重复，使用 "表名.字段名 as 别名" 代替。
+-- 由于字段名存在重复，可以使用 "表名.字段名" 代替。    //也可给ta取个别名 "表名.字段名 as 别名"
 SELECT student.name as s_name, course.name as c_name, degree 
 FROM student, score, course
 WHERE student.NO = score.s_no
@@ -699,6 +703,9 @@ AND score.c_no = course.no;
 在 `score` 表中根据 `student`  表的学生编号筛选出学生的课堂号和成绩：
 
 ```mysql
+select * from student where class='95031';
+select no from student where class='95031';
+
 -- IN (..): 将筛选出的学生号当做 s_no 的条件查询
 SELECT s_no, c_no, degree FROM score
 WHERE s_no IN (SELECT no FROM student WHERE class = '95031');
@@ -718,8 +725,7 @@ WHERE s_no IN (SELECT no FROM student WHERE class = '95031');
 
 ```mysql
 SELECT c_no, AVG(degree) FROM score
-WHERE s_no IN (SELECT no FROM student WHERE class = '95031')
-GROUP BY c_no;
+WHERE s_no IN (SELECT no FROM student WHERE class = '95031') GROUP BY c_no;
 +-------+-------------+
 | c_no  | AVG(degree) |
 +-------+-------------+
@@ -733,12 +739,13 @@ GROUP BY c_no;
 
 **查询在 `3-105` 课程中，所有成绩高于 `109` 号同学的记录。**
 
-首先筛选出课堂号为 `3-105` ，在找出所有成绩高于 `109` 号同学的的行。
+首先筛选出课堂号为 `3-105` ，再找出所有成绩高于 `109` 号同学的的行。
 
 ```mysql
+SELECT degree FROM score WHERE s_no = '109' AND c_no = '3-105'  //可以查到109号同学的成绩。
+
 SELECT * FROM score 
-WHERE c_no = '3-105'
-AND degree > (SELECT degree FROM score WHERE s_no = '109' AND c_no = '3-105');
+WHERE c_no = '3-105' AND degree > (SELECT degree FROM score WHERE s_no = '109' AND c_no = '3-105');  //这样一看括号里的意思就很好理解了
 ```
 
 ### 子查询 - 2
