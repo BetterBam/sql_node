@@ -773,6 +773,8 @@ WHERE YEAR(birthday) = (SELECT YEAR(birthday) FROM student WHERE no IN (101, 108
 
 **查询 `'张旭'` 教师任课的学生成绩表。**
 
+禁止套娃（滑稽）
+
 首先找到教师编号：
 
 ```mysql
@@ -888,7 +890,7 @@ SELECT t_no FROM course WHERE no IN (
 SELECT name FROM teacher WHERE no IN (
     -- 最终条件
     SELECT t_no FROM course WHERE no IN (
-        SELECT c_no FROM score GROUP BY c_no HAVING COUNT(*) > 5
+        SELECT c_no FROM score GROUP BY c_no HAVING COUNT(*) > 5            //也就是一直套娃就好
     )
 );
 ```
@@ -940,24 +942,22 @@ SELECT * FROM score WHERE c_no IN (
 | 109  | 3-105 |     76 |
 +------+-------+--------+
 ```
+### in 表示或者关系
+### where 条件查询
 
-### UNION 和 NOTIN 的使用
+### UNION 和 NOT IN 的使用
 
-**查询 `计算机系` 与 `电子工程系` 中的不同职称的教师。**
+**查询 `计算机系` 与 `电子工程系` 中的不同职称的教师。（即去掉交集）**
 
 ```mysql
--- NOT: 代表逻辑非
-SELECT * FROM teacher WHERE department = '计算机系' AND profession NOT IN (
-    SELECT profession FROM teacher WHERE department = '电子工程系'
-)
--- 合并两个集
+-- NOT: 代表逻辑非   -- UNION 合并两个集/求并集。 把两个结果合并
+SELECT * FROM teacher WHERE department = '计算机系' AND profession NOT IN (SELECT profession FROM teacher WHERE department = '电子工程系') 
 UNION
-SELECT * FROM teacher WHERE department = '电子工程系' AND profession NOT IN (
-    SELECT profession FROM teacher WHERE department = '计算机系'
-);
+SELECT * FROM teacher WHERE department = '电子工程系' AND profession NOT IN (SELECT profession FROM teacher WHERE department = '计算机系');
+//这样输出的就是两个语句结果的并集了
 ```
 
-### ANY 表示至少一个 - DESC ( 降序 )
+### ANY 表示任何一个 - DESC ( 降序 )
 
 **查询课程 `3-105` 且成绩 <u>至少</u> 高于 `3-245` 的 `score` 表。**
 
@@ -986,9 +986,9 @@ SELECT * FROM score WHERE c_no = '3-245';
 -- ANY: 符合SQL语句中的任意条件。
 -- 也就是说，在 3-105 成绩中，只要有一个大于从 3-245 筛选出来的任意行就符合条件，
 -- 最后根据降序查询结果。
-SELECT * FROM score WHERE c_no = '3-105' AND degree > ANY(
-    SELECT degree FROM score WHERE c_no = '3-245'
-) ORDER BY degree DESC;
+SELECT * FROM score WHERE c_no = '3-105' AND degree > ANY(SELECT degree FROM score WHERE c_no = '3-245') ORDER BY degree DESC;
+
+//ORDER BY degree DESC 降序排列。
 +------+-------+--------+
 | s_no | c_no  | degree |
 +------+-------+--------+
@@ -1001,14 +1001,14 @@ SELECT * FROM score WHERE c_no = '3-105' AND degree > ANY(
 +------+-------+--------+
 ```
 
-### 表示所有的 ALL
+### ALL 表示所有的 
 
 **查询课程 `3-105` 且成绩高于 `3-245` 的 `score` 表。**
 
 ```mysql
 -- 只需对上一道题稍作修改。
 -- ALL: 符合SQL语句中的所有条件。
--- 也就是说，在 3-105 每一行成绩中，都要大于从 3-245 筛选出来全部行才算符合条件。
+-- 也就是说，在 3-105 每一行成绩中，都要大于从 3-245 筛选出来全部行才算符合条件。    //也可以用max
 SELECT * FROM score WHERE c_no = '3-105' AND degree > ALL(
     SELECT degree FROM score WHERE c_no = '3-245'
 );
@@ -1022,6 +1022,82 @@ SELECT * FROM score WHERE c_no = '3-105' AND degree > ALL(
 | 105  | 3-105 |     88 |
 +------+-------+--------+
 ```
+### AS 取别名
+
+-- 查询所有教师和同学的name、sex、birthday
+
+首先查同学的
+mysql> select sname,ssex,sbirthday from student;
++-----------+------+------------+
+| sname     | ssex | sbirthday  |
++-----------+------+------------+
+| 曾华      | 男   | 1977-09-01 |
+| 匡明      | 男   | 1975-10-02 |
+| 王丽      | 女   | 1976-01-23 |
+| 李军      | 男   | 1976-02-20 |
+| 王芳      | 女   | 1975-02-10 |
+| 陆军      | 男   | 1974-06-03 |
+| 王尼玛    | 男   | 1976-02-20 |
+| 张全蛋    | 男   | 1975-02-10 |
+| 赵铁柱    | 男   | 1974-06-03 |
++-----------+------+------------+
+
+再查老师的
+mysql> select name,sex,birthday from teacher;
++--------+-----+------------+
+| name   | sex | birthday   |
++--------+-----+------------+
+| 李诚   | 男  | 1958-12-02 |
+| 王萍   | 女  | 1972-05-05 |
+| 刘冰   | 女  | 1977-08-14 |
+| 张旭   | 男  | 1969-03-12 |
++--------+-----+------------+
+
+再用union 合并
+mysql> select sname,ssex,sbirthday from student
+    -> union
+    -> select name,sex,birthday from teacher;
++-----------+------+------------+
+| sname     | ssex | sbirthday  |
++-----------+------+------------+
+| 曾华      | 男   | 1977-09-01 |
+| 匡明      | 男   | 1975-10-02 |
+| 王丽      | 女   | 1976-01-23 |
+| 李军      | 男   | 1976-02-20 |
+| 王芳      | 女   | 1975-02-10 |
+| 陆军      | 男   | 1974-06-03 |
+| 王尼玛    | 男   | 1976-02-20 |
+| 张全蛋    | 男   | 1975-02-10 |
+| 赵铁柱    | 男   | 1974-06-03 |
+| 李诚      | 男   | 1958-12-02 |
+| 王萍      | 女   | 1972-05-05 |
+| 刘冰      | 女   | 1977-08-14 |
+| 张旭      | 男   | 1969-03-12 |
++-----------+------+------------+
+
+此时表头是sname和ssex和sbirthday，而老师的表头默认跟随第一行输出的表头，
+因此此时需要用 原名 as 别名 ，来把表头换成name、sex、birthday
+mysql> select sname as name,ssex as sex,sbirthday as birthday from student
+    -> union
+    -> select name,sex,birthday from teacher;
++-----------+-----+------------+
+| name      | sex | birthday   |
++-----------+-----+------------+
+| 曾华      | 男  | 1977-09-01 |
+| 匡明      | 男  | 1975-10-02 |
+| 王丽      | 女  | 1976-01-23 |
+| 李军      | 男  | 1976-02-20 |
+| 王芳      | 女  | 1975-02-10 |
+| 陆军      | 男  | 1974-06-03 |
+| 王尼玛    | 男  | 1976-02-20 |
+| 张全蛋    | 男  | 1975-02-10 |
+| 赵铁柱    | 男  | 1974-06-03 |
+| 李诚      | 男  | 1958-12-02 |
+| 王萍      | 女  | 1972-05-05 |
+| 刘冰      | 女  | 1977-08-14 |
+| 张旭      | 男  | 1969-03-12 |
++-----------+-----+------------+
+
 
 ### 复制表的数据作为条件查询
 
