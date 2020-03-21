@@ -1024,6 +1024,7 @@ SELECT * FROM score WHERE c_no = '3-105' AND degree > ALL(
 ```
 ### AS 取别名
 
+```mysql
 -- 查询所有教师和同学的name、sex、birthday
 
 首先查同学的
@@ -1097,7 +1098,7 @@ mysql> select sname as name,ssex as sex,sbirthday as birthday from student
 | 刘冰      | 女  | 1977-08-14 |
 | 张旭      | 男  | 1969-03-12 |
 +-----------+-----+------------+
-
+```
 
 ### 复制表的数据作为条件查询
 
