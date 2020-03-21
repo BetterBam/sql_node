@@ -1076,7 +1076,7 @@ mysql> select sname,ssex,sbirthday from student
 +-----------+------+------------+
 
 此时表头是sname和ssex和sbirthday，而老师的表头默认跟随第一行输出的表头，
-因此此时需要用 原名 as 别名 ，来把表头换成name、sex、birthday
+因此此时需要用 `原名 as 别名` ，来把表头换成name、sex、birthday
 mysql> select sname as name,ssex as sex,sbirthday as birthday from student
     -> union
     -> select name,sex,birthday from teacher;
@@ -1134,7 +1134,7 @@ SELECT degree FROM score;
 +--------+
 
 -- 将表 b 作用于表 a 中查询数据
--- score a (b): 将表声明为 a (b)，
+-- score a : 将表声明为 a ，(相当于一个a是表的一个别名）
 -- 如此就能用 a.c_no = b.c_no 作为条件执行查询了。
 SELECT * FROM score a WHERE degree < (
     (SELECT AVG(degree) FROM score b WHERE a.c_no = b.c_no)
@@ -1188,7 +1188,7 @@ SELECT * FROM student;
 | 110 | 张飞      | 男  | 1974-06-03 | 95038 |
 +-----+-----------+-----+------------+-------+
 
--- 只查询性别为男，然后按 class 分组，并限制 class 行大于 1。
+-- 只查询性别为男，然后用group by按 class 分组，并限制 class 行大于 1。
 SELECT class FROM student WHERE sex = '男' GROUP BY class HAVING COUNT(*) > 1;
 +-------+
 | class |
@@ -1224,7 +1224,7 @@ mysql> SELECT * FROM student WHERE name NOT LIKE '王%';
 **查询 `student` 表中每个学生的姓名和年龄。**
 
 ```mysql
--- 使用函数 YEAR(NOW()) 计算出当前年份，减去出生年份后得出年龄。
+-- 使用函数 YEAR(NOW()) 可得到当前年份，减去出生年份后得出年龄。
 SELECT name, YEAR(NOW()) - YEAR(birthday) as age FROM student;
 +-----------+------+
 | name      | age  |
@@ -1242,7 +1242,7 @@ SELECT name, YEAR(NOW()) - YEAR(birthday) as age FROM student;
 +-----------+------+
 ```
 
-### MAX 与 MIN 函数
+### MAX 与 MIN 函数 求最大最小值
 
 **查询 `student` 表中最大和最小的 `birthday` 值。**
 
@@ -1257,10 +1257,10 @@ SELECT MAX(birthday), MIN(birthday) FROM student;
 
 ### 多段排序
 
-**以 `class` 和 `birthday` 从大到小的顺序查询 `student` 表。**
+**以 `class` 和 `年龄` 从大到小的顺序查询 `student` 表。**
 
 ```mysql
-SELECT * FROM student ORDER BY class DESC, birthday;
+SELECT * FROM student ORDER BY class DESC, birthday;       //注意：年龄是出生日期越小越大
 +-----+-----------+-----+------------+-------+
 | no  | name      | sex | birthday   | class |
 +-----+-----------+-----+------------+-------+
@@ -1345,11 +1345,9 @@ SELECT name, sex FROM student WHERE sex = (
 **查询和 "李军" 同性别且同班的同学 `name` 。**
 
 ```mysql
-SELECT name, sex, class FROM student WHERE sex = (
-    SELECT sex FROM student WHERE name = '李军'
-) AND class = (
-    SELECT class FROM student WHERE name = '李军'
-);
+SELECT name, sex, class FROM student 
+WHERE sex = (SELECT sex FROM student WHERE name = '李军') 
+AND class = (SELECT class FROM student WHERE name = '李军');
 +-----------+-----+-------+
 | name      | sex | class |
 +-----------+-----+-------+
