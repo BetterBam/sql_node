@@ -1477,12 +1477,12 @@ SELECT * FROM person;
 
 分析两张表发现，`person` 表并没有为 `cardId` 字段设置一个在 `card` 表中对应的 `id` 外键。如果设置了的话，`person` 中 `cardId` 字段值为 `6` 的行就插不进去，因为该 `cardId` 值在 `card` 表中并没有。
 
-#### 内连接
+#### 内连接/ 内联查询   INNER JOIN
 
 要查询这两张表中有关系的数据，可以使用 `INNER JOIN` ( 内连接 ) 将它们连接在一起。
 
 ```mysql
--- INNER JOIN: 表示为内连接，将两张表拼接在一起。
+-- INNER JOIN(也可以JOIN): 内联查询,也叫内连接，其实就是两张表中的数据，通过某个字段相等，查询出相关的记录数据。 将两张表拼接在一起。
 -- on: 表示要执行某个条件。
 SELECT * FROM person INNER JOIN card on person.cardId = card.id;
 +------+--------+--------+------+-----------+
@@ -1498,9 +1498,10 @@ SELECT * FROM person INNER JOIN card on person.cardId = card.id;
 
 > 注意：`card` 的整张表被连接到了右边。
 
-#### 左外连接
+#### 左外连接   LEFT JOIN
 
-完整显示左边的表 ( `person` ) ，右边的表如果符合条件就显示，不符合则补 `NULL` 。
+把左边表( `person` )中的数据全部显示出来，右边的表如果符合条件就显示，不符合则补 `NULL` 。
+左外连接实际上是求整个左表+右表和左表的交集部分
 
 ```mysql
 -- LEFT JOIN 也叫做 LEFT OUTER JOIN，用这两种方式的查询结果是一样的。
@@ -1514,11 +1515,13 @@ SELECT * FROM person LEFT JOIN card on person.cardId = card.id;
 +------+--------+--------+------+-----------+
 ```
 
-#### 右外链接
+#### 右外链接   RIGHT JOIN
 
 完整显示右边的表 ( `card` ) ，左边的表如果符合条件就显示，不符合则补 `NULL` 。
+右外连接实际上是求整个右表+左表和右表的交集部分
 
 ```mysql
+-- RIGHT JOIN 也叫做 RIGHT OUTER JOIN，用这两种方式的查询结果是一样的。
 SELECT * FROM person RIGHT JOIN card on person.cardId = card.id;
 +------+--------+--------+------+-----------+
 | id   | name   | cardId | id   | name      |
@@ -1531,15 +1534,17 @@ SELECT * FROM person RIGHT JOIN card on person.cardId = card.id;
 +------+--------+--------+------+-----------+
 ```
 
-#### 全外链接
+#### 全外连接   FULL JOIN
 
 完整显示两张表的全部数据。
 
 ```mysql
--- MySQL 不支持这种语法的全外连接
+-- MySQL 不支持下面这种语法的全外连接
 -- SELECT * FROM person FULL JOIN card on person.cardId = card.id;
 -- 出现错误：
 -- ERROR 1054 (42S22): Unknown column 'person.cardId' in 'on clause'
+
+全外连接实际上是求两个表所有数据的并集，因此可用左连接union右连接来求
 
 -- MySQL全连接语法，使用 UNION 将两张表合并在一起。
 SELECT * FROM person LEFT JOIN card on person.cardId = card.id
@@ -1573,11 +1578,12 @@ UPDATE user set money = money + 100 WHERE name = 'b';
 
 在实际项目中，假设只有一条 SQL 语句执行成功，而另外一条执行失败了，就会出现数据前后不一致。
 
-因此，在执行多条有关联 SQL 语句时，**事务**可能会要求这些 SQL 语句要么同时执行成功，要么就都执行失败。
+因此，在执行多条有关联 SQL 语句时，**事务**可能会要求这些 SQL 语句要么同时执行成功，要么就都执行失败。原子性
 
 ### 如何控制事务 - COMMIT / ROLLBACK
 
-在 MySQL 中，事务的**自动提交**状态默认是开启的。
+在 MySQL 中，是默认开启事务的。
+也就是说，事务的**自动提交**状态默认是开启的。
 
 ```mysql
 -- 查询事务的自动提交状态
@@ -1589,7 +1595,7 @@ SELECT @@AUTOCOMMIT;
 +--------------+
 ```
 
-**自动提交的作用**：当我们执行一条 SQL 语句的时候，其产生的效果就会立即体现出来，且不能**回滚**。
+**自动提交的作用**/**事务默认开启的作用**：当我们执行一条 SQL 语句的时候，其产生的效果就会立即体现出来，且不能**回滚**。
 
 什么是回滚？举个例子：
 
