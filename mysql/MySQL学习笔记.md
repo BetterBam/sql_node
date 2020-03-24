@@ -1636,11 +1636,13 @@ SELECT * FROM user;
 +----+------+-------+
 ```
 
-由于所有执行过的 SQL 语句都已经被提交过了，所以数据并没有发生回滚。那如何让数据可以发生回滚？
+由于所有执行过的 SQL 语句都已经被自动提交过了，所以数据并没有发生回滚。那如何让数据可以发生回滚？
+
+方法是设置mysql自动提交为false，即关闭了 mysql 的自动提交
 
 ```mysql
--- 关闭自动提交
-SET AUTOCOMMIT = 0;
+-- 关闭自动提交（commit）
+SET AUTOCOMMIT = 0;     //关闭了 mysql 的自动提交
 
 -- 查询自动提交状态
 SELECT @@AUTOCOMMIT;
@@ -1676,7 +1678,7 @@ SELECT * FROM user;
 -- 由于数据还没有真正提交，可以使用回滚
 ROLLBACK;
 
--- 再次查询
+-- 回滚后再次查询
 SELECT * FROM user;
 +----+------+-------+
 | id | name | money |
@@ -1685,18 +1687,19 @@ SELECT * FROM user;
 +----+------+-------+
 ```
 
-那如何将虚拟的数据真正提交到数据库中？使用 `COMMIT` : 
+那在关闭了自动提交后，如何将虚拟的数据真正提交到数据库中？使用 `COMMIT` : 
 
 ```mysql
+-- 手动提交数据（数据具有持久性），
+-- 在插入数据后，使用**COMMIT**将数据真正提交到数据库中，执行后不能再回滚提交过的数据。
+
 INSERT INTO user VALUES (2, 'b', 1000);
--- 手动提交数据（持久性），
--- 将数据真正提交到数据库中，执行后不能再回滚提交过的数据。
-COMMIT;
+COMMIT;       //提交数据
 
 -- 提交后测试回滚
 ROLLBACK;
 
--- 再次查询（回滚无效了）
+-- 再次查询（可以看出，回滚无效了）
 SELECT * FROM user;
 +----+------+-------+
 | id | name | money |
@@ -1711,8 +1714,10 @@ SELECT * FROM user;
 > 1. **自动提交**
 >
 >    - 查看自动提交状态：`SELECT @@AUTOCOMMIT` ；
+>    @@AUTOCOMMIT = 1 为自动提交开启状态。
+>    @@AUTOCOMMIT = 0 为自动提交关闭状态
 >
->    - 设置自动提交状态：`SET AUTOCOMMIT = 0` 。
+>    - 关闭自动提交：`SET AUTOCOMMIT = 0` 。
 >
 > 2. **手动提交**
 >
@@ -1755,16 +1760,18 @@ SELECT * FROM user;
 +----+------+-------+
 ```
 
-这时我们又回到了发生意外之前的状态，也就是说，事务给我们提供了一个可以反悔的机会。假设数据没有发生意外，这时可以手动将数据真正提交到数据表中：`COMMIT` 。
+这时我们又回到了发生意外之前的状态，也就是说，**事务给我们提供了一个可以反悔的机会**。假设数据没有发生意外，这时可以手动将数据真正提交到数据表中：`COMMIT` 。
 
-### 手动开启事务 - BEGIN / START TRANSACTION
+### 手动开启一个事务 - BEGIN / START TRANSACTION
 
-事务的默认提交被开启 ( `@@AUTOCOMMIT = 1` ) 后，此时就不能使用事务回滚了。但是我们还可以手动开启一个事务处理事件，使其可以发生回滚：
+事务的默认提交被开启 ( `@@AUTOCOMMIT = 1` ) 后，此时就不能使用事务回滚了。
+
+**但是**我们还可以手动开启一个事务处理事件，使其可以发生回滚：
 
 ```mysql
 -- 使用 BEGIN 或者 START TRANSACTION 手动开启一个事务
--- START TRANSACTION;
-BEGIN;
+
+BEGIN 或（START TRANSACTION）;
 UPDATE user set money = money - 100 WHERE name = 'a';
 UPDATE user set money = money + 100 WHERE name = 'b';
 
@@ -1778,9 +1785,9 @@ SELECT * FROM user;
 |  2 | b    |  1100 |
 +----+------+-------+
 
--- 测试回滚
-ROLLBACK;
+-- 测试能否回滚， 回滚成功
 
+ROLLBACK;
 SELECT * FROM user;
 +----+------+-------+
 | id | name | money |
@@ -1805,7 +1812,7 @@ SELECT * FROM user;
 |  2 | b    |  1100 |
 +----+------+-------+
 
--- 提交数据
+-- 提交数据   事务开启之后，一旦commit提交，就不能回滚了。（也就是当前这个事务在提交的时候就结束了）
 COMMIT;
 
 -- 测试回滚（无效，因为表的数据已经被提交）
