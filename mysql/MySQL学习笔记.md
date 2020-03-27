@@ -1,5 +1,13 @@
 # MySQL学习笔记
 
+## 常用容易忘记的
+```shell
+--  排序查询
+LIMIT r, n: 表示从第r行开始，查询n条数据
+
+
+```
+
 ## 基础知识
 ```shell
 # localhost
