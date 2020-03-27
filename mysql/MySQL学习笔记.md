@@ -1030,7 +1030,7 @@ SELECT * FROM score WHERE c_no = '3-105' AND degree > ALL(
 | 105  | 3-105 |     88 |
 +------+-------+--------+
 ```
-### AS 取别名
+### AS 取别名  //或也可直接在后面跟上别名而省略as
 
 ```mysql
 -- 查询所有教师和同学的name、sex、birthday
@@ -1513,7 +1513,8 @@ SELECT * FROM person INNER JOIN card on person.cardId = card.id;
 
 ```mysql
 -- LEFT JOIN 也叫做 LEFT OUTER JOIN，用这两种方式的查询结果是一样的。
-SELECT * FROM person LEFT JOIN card on person.cardId = card.id;
+SELECT * FROM person LEFT JOIN card on person.cardId = card.id;  
+// 可在 SELECT * FROM 的*中写上要显示的内容条目，如SELECT person.name,card.id FROM person LEFT JOIN card on person.cardId = card.id;
 +------+--------+--------+------+-----------+
 | id   | name   | cardId | id   | name      |
 +------+--------+--------+------+-----------+
